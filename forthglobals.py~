@@ -1,5 +1,0 @@
-cWords = {":":cColon, ";":cSemiColon, "if":cIf, "else":cElse, "then":cThen}
-rWords = {"+":rAdd}
-defs = []
-
-SYMHALT, SYMRUCALL, SYMRCALL, SYMCUCALL, SYMCCALL, SYMRET, SYMINT, SYMSTR = range(8)
