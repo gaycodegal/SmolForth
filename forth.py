@@ -13,11 +13,12 @@ defs = []
 
 
 def compile(source):
+    """takes in a iterable which returns the separated words
+    and compiles it into bytecode"""
     nums = set("1234567890")
     stack = []
     links = []
     for word in source:
-        word = word.strip()
         cVal = cWords.get(word, None)
         rVal = rWords.get(word, None)
         if cVal != None:
@@ -49,11 +50,16 @@ def compile(source):
     #print("stack:", stack)
     #print("defnames:", rWords)
     #print("defs:", defs)
-    interp(defs + stack, len(defs))
+    return [len(defs)] + defs + stack
 
-def interp(dataspace, i):
+def interp(dataspace):
+    """Takes a bytecode compiled forth program definition <dataspace>
+    forth program definition structure described in the README"""
     stack = []
     links = []
+    i = dataspace[0]
+    DATASTART = 1
+    i += DATASTART
     ldata = len(dataspace)
     #print("dataspace:", dataspace)
     while i < ldata:
@@ -66,7 +72,7 @@ def interp(dataspace, i):
             ind = dataspace[i]
             i += 1
             links.append(i)
-            i = ind
+            i = ind + DATASTART
         elif sym == SYMRCALL:
             fun = dataspace[i]
             i += 1
@@ -102,5 +108,6 @@ def interp(dataspace, i):
         #print("cur:",stack)
     #print("output:", stack)
     
-compile(": THREE getInt if NOTZERO else ZERO then ; THREE .".split(" "))#sys.stdin
+compiled = compile(": THREE getInt if NOTZERO else ZERO then ; THREE .".split(" "))#sys.stdin
+interp(compiled)
 #compile(sys.stdin)
