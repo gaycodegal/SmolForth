@@ -33,7 +33,7 @@ def compile(source):
             else:
                 stack.append(SYMRCALL)
                 stack.append(rVal[0])
-        elif len(word) >= 2 and word[0] == "0" and not (word[1] > "0" and word[1] < "9"):
+        elif len(word) >= 2 and word[0] == "0" and not (word[1] >= "0" and word[1] <= "9"):
             stack.append(SYMINT)
             if word[1] == "x":
                 stack.append(int(word[2:],16))
@@ -91,7 +91,6 @@ def interp(dataspace):
             stack.append(d)
         elif sym == SYMRET:
             i = links.pop()
-            pass
         elif sym == SYMRBRANCH:
             jmp = dataspace[i]
             i += 1
