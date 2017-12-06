@@ -1,8 +1,8 @@
 #include "main.h"
 
-struct fnptr {
-
-};
+typedef struct s_fnptr {
+  
+} fnptr;
 
 /*
   mains_map = hashmap_new();
@@ -33,9 +33,9 @@ struct fnptr {
 stack *compile(char ** source){
   char * word;
   fnptr * cVal;
-  stack *stk = new_stack();
-  stack *links = new_stack();
-  while((word = *(source++)) != NULL){
+  stack *stk = new_stack(1 << 10);
+  stack *links = new_stack(1 << 10);
+  /*  while((word = *(source++)) != NULL){
     cVal = cWords->get(word, NULL);
     rVal = rWords->get(word, NULL);
     if(cVal != NULL){
@@ -77,11 +77,6 @@ stack *compile(char ** source){
       }
     }
   }
-  /*
-    #print("stack:", stack)
-    #print("defnames:", rWords)
-    #print("defs:", defs)
-  */
   stack *dataspace = new_stack(stack->len + defs->len + 1);
   *(int *)(dataspace->data) = defs->len;
   memcpy(dataspace->data + sizeof(int), defs->data, defs->len);
@@ -90,6 +85,7 @@ stack *compile(char ** source){
   free_stack(links);
   free_stack(defs);
   return dataspace;
+  */
 }
 
 /**
@@ -97,7 +93,7 @@ stack *compile(char ** source){
    forth program definition structure described in the README
 */
 void interp(stack *dataspace){
-  stack *stk = new_stack();
+  /*stack *stk = new_stack();
   stack *links = new_stack();
   int i = *(int *)(dataspace->data);
   int DATASTART = 1;
@@ -164,6 +160,7 @@ void interp(stack *dataspace){
   }
   free_stack(stack);
   free_stack(links);
+  */
 }
 
 
@@ -172,10 +169,11 @@ void interp(stack *dataspace){
 
 int main(int argc, char **argv){
   printf("hi\n");
-  char **words = splitwords(": THREE getInt if NOTZERO else ZERO then ; THREE .");
-  stack *compiled = compile(words);//#sys.stdin
+  //char **words = splitwords(": THREE getInt if NOTZERO else ZERO then ; THREE .");
+  stack *compiled = compile(NULL);//words//#sys.stdin
   interp(compiled);
-  free_stack(compiled);
+  stack_main();
+  //free_stack(compiled);
   printf("bye\n");
   
   return 0;

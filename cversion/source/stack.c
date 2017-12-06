@@ -1,11 +1,5 @@
 #include "stack.h"
 
-typedef struct s_stack {
-  char *data;
-  size_t index;
-  size_t length;
-} stack;
-
 stack *new_stack(size_t size){
   stack *s = NEW(stack);
   s->data = MALLOC(char, size);
