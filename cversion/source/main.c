@@ -1,4 +1,5 @@
 #include "main.h"
+#include "hashmap.h"
 
 typedef struct s_fnptr {
   
@@ -26,18 +27,117 @@ typedef struct s_fnptr {
 
 */
 
+char **split_words(char *source){
+  int num_words = 0, end_words;
+  size_t len;
+  char *p = source, *t;
+  char c;
+  char **result, **resp;
+  while((c = *(p++))){
+    if(c == ' '){
+      ++num_words;
+    }
+  }
+  ++num_words; // for instance "asdf" generates one word
+  end_words = num_words;
+  result = MALLOC(char *, num_words + 1);
+  resp = result;
+  p = source;
+  while(num_words--){
+    t = p;
+    c = *t;
+    while(c && c != ' '){
+      ++t;
+      c = *t;
+    }
+    len = (size_t)(t - p);
+    //printf("len: %ld\n", len);
+    t = MALLOC(char, len + 1);
+    memcpy(t, p, len);
+    t[len] = 0;
+    //printf("word: '%s'\n", t);
+    *resp = t;
+    ++resp;
+    p += len + 1;
+  }
+  result[end_words] = NULL;
+  return result;
+}
+
+char * free_words(char **words){
+  char **t = words;
+  char *word;
+  while((word = *(t++))){
+    printf("free: '%s'\n", word);
+    free(word);
+  }
+  free(words);
+}
+
+void cColon(stack *stk, stack *links, stack *defs){
+  int top = (stk->index);
+  PUTINT(links, &top);
+  printf("HIHI\n");
+}
+
+void cSemiColon(stack *stk, stack *links, stack *defs){
+  int top = stk->index;
+  int bottom = *POPINT(links);
+  /*seq = stack[bottom + 2:top]
+    ind = len(defs)
+    seq.append(SYMRET)
+    defs.extend(seq)
+    if top-bottom >= 2:
+        rWords[stack[bottom + 1]] = ind
+    for i in range(top-bottom):
+        stack.pop()
+  */
+  printf("Byebye %i %i\n",top, bottom);
+}
+
+
+typedef void (*compfn)(stack *, stack *, stack *);
+
+compfn *make_comp_ptr(compfn fn){
+  compfn *p = NEW(compfn);
+  *p = fn;
+  return p;
+}
+
+compfn *get_comp(map_t *map, char *key){
+  any_t p[1];
+  int status = hashmap_get(map, key, p);
+  if(status != MAP_OK){
+    return NULL;
+  }
+  return (compfn *)*p;
+}
+
 /**
    takes in a iterable which returns the separated words
    and compiles it into bytecode
 */
 stack *compile(char ** source){
   char * word;
-  fnptr * cVal;
+  compfn *cVal;
   stack *stk = new_stack(1 << 10);
   stack *links = new_stack(1 << 10);
-  /*  while((word = *(source++)) != NULL){
-    cVal = cWords->get(word, NULL);
-    rVal = rWords->get(word, NULL);
+  stack *defs = new_stack(1 << 10);
+  map_t *mains_map;
+  mains_map = hashmap_new();  
+  printf("start compile\n");
+  hashmap_put(mains_map, ":", make_comp_ptr(&cColon));
+  hashmap_put(mains_map, ";", make_comp_ptr(&cSemiColon));
+
+  while((word = *(source++)) != NULL){
+    printf("compiling: %s\n", word);
+    cVal = get_comp(mains_map, word);
+    if(cVal != NULL){
+      (*cVal)(stk, links, defs);
+    }
+    //cVal = cWords->get(word, NULL);
+    //rVal = rWords->get(word, NULL);
+    /*
     if(cVal != NULL){
       if(cVal == int){
 	interpC(stack, links, defs, cWords, rWords);
@@ -75,17 +175,17 @@ stack *compile(char ** source){
 	stack.append(SYMSTR);
 	stack.append(word);
       }
-    }
+      }*/
   }
-  stack *dataspace = new_stack(stack->len + defs->len + 1);
+  /*stack *dataspace = new_stack(stack->len + defs->len + 1);
   *(int *)(dataspace->data) = defs->len;
   memcpy(dataspace->data + sizeof(int), defs->data, defs->len);
-  memcpy(dataspace->data + sizeof(int) + defs->len, stack->data, stack->len);
-  free_stack(stack);
-  free_stack(links);
+  memcpy(dataspace->data + sizeof(int) + defs->len, stack->data, stack->len);*/
   free_stack(defs);
-  return dataspace;
-  */
+  free_stack(stk);
+  free_stack(links);
+  //return dataspace;
+  return NULL;
 }
 
 /**
@@ -169,12 +269,12 @@ void interp(stack *dataspace){
 
 int main(int argc, char **argv){
   printf("hi\n");
-  //char **words = splitwords(": THREE getInt if NOTZERO else ZERO then ; THREE .");
-  stack *compiled = compile(NULL);//words//#sys.stdin
+  char **words = split_words(": THREE getInt if NOTZERO else ZERO then ; THREE .");
+  stack *compiled = compile(words);//words//#sys.stdin
   interp(compiled);
   stack_main();
   //free_stack(compiled);
   printf("bye\n");
-  
+  free_words(words);
   return 0;
 }

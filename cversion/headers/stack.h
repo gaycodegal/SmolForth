@@ -21,6 +21,11 @@ typedef struct s_stack {
 stack *new_stack(size_t size);
 
 /**
+   frees a stack
+*/
+void free_stack(stack *s);
+
+/**
    puts some data onto the stack,
    incrementing index
    

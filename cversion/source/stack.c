@@ -7,6 +7,11 @@ stack *new_stack(size_t size){
   s->length = size;
 }
 
+void free_stack(stack *s){
+  free(s->data);
+  free(s);
+}
+
 void put_stack(stack *s, void *p, size_t size){
   if(size + s->index > s->length){
     return;
