@@ -120,9 +120,9 @@ compfn *get_comp(map_t *map, char *key){
 stack *compile(char ** source){
   char * word;
   compfn *cVal;
-  stack *stk = new_stack(1 << 10);
-  stack *links = new_stack(1 << 10);
-  stack *defs = new_stack(1 << 10);
+  stack *stk = new_stack(sizeof(int), 1 << 10);
+  stack *links = new_stack(sizeof(int), 1 << 10);
+  stack *defs = new_stack(sizeof(int), 1 << 10);
   map_t *mains_map;
   mains_map = hashmap_new();  
   printf("start compile\n");

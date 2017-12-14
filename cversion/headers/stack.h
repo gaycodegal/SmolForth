@@ -7,18 +7,21 @@
 #define PUTINT(STACK, VAL) put_stack((STACK), (VAL), sizeof(int))
 #define PUTCHAR(STACK, VAL) put_stack((STACK), (VAL), sizeof(char))
 #define GETINT(STACK) ((int *)get_stack((STACK)))
-#define POPINT(STACK) ((int *)pop_stack((STACK), sizeof(int)))
+#define POPINT(STACK) ((int *)pop_stack((STACK)))
 
 typedef struct s_stack {
   char *data;
   size_t index;
   size_t length;
+  size_t item_size;
 } stack;
 
 /**
    creates a new stack with data of length <size>
+   where each item in the stack is at max
+   <item_size> bytes big.
 */
-stack *new_stack(size_t size);
+stack *new_stack(size_t item_size, size_t size);
 
 /**
    frees a stack
@@ -39,7 +42,7 @@ void put_stack(stack *s, void *p, size_t size);
 
    returns null if there's nothing to pop
  */
-void *pop_stack(stack *s, size_t size);
+void *pop_stack(stack *s);
 
 /**
    gets some data from the stack
