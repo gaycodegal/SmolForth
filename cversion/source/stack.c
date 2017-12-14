@@ -22,6 +22,33 @@ void put_stack(stack *s, void *p, size_t size){
   printf("index: %ld\n", (s->index));
 }
 
+void stack_copy(stack *dst, stack *src, size_t n){
+  size_t disize;
+  size_t sisize;
+  size_t minsize;
+  size_t times;
+  char *sdata;
+  char *ddata;
+  sisize = src->item_size;
+  disize = dst->item_size;
+  if(src->index + n * sisize > src->length || dst->index + n * disize > dst->length){
+    return;
+  }
+  minsize = sisize;
+  if(sisize > disize)
+    minsize = disize;
+  ddata = dst->data + src->index;
+  sdata = src->data + dst->index;
+  times = n;
+  while(times--){
+    memcpy(ddata, sdata, minsize);
+    ddata += disize;
+    sisize += sisize;
+  }
+  src->index += n * sisize;
+  dst->index += n * disize;
+}
+
 void *pop_stack(stack *s){
   if(s->index - s->item_size < 0){
     return NULL;

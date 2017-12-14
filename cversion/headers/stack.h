@@ -53,6 +53,13 @@ void *pop_stack(stack *s);
 void *get_stack(stack *s);
 
 /**
+   copies <n> many things from <source> into <dest>
+   increments both stacks by <n> * stack->item_size
+   if item sizes differ, uses smaller as transfer unit.
+*/
+void stack_copy(stack *dest, stack *source, size_t n);
+
+/**
    some little tests
  */
 int stack_main();

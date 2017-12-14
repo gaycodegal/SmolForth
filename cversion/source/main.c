@@ -74,29 +74,27 @@ char * free_words(char **words){
   free(words);
 }
 
-void cColon(stack *stk, stack *links, stack *defs){
+void cColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   int top = (stk->index);
   PUTINT(links, &top);
   printf("HIHI\n");
 }
 
-void cSemiColon(stack *stk, stack *links, stack *defs){
-  int top = stk->index;
-  int bottom = *POPINT(links);
-  /*seq = stack[bottom + 2:top]
-    ind = len(defs)
-    seq.append(SYMRET)
-    defs.extend(seq)
-    if top-bottom >= 2:
-        rWords[stack[bottom + 1]] = ind
-    for i in range(top-bottom):
-        stack.pop()
-  */
-  printf("Byebye %i %i\n",top, bottom);
+void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
+  size_t top = stk->index;
+  size_t bottom = *POPINT(links);
+  size_t blocks = (top - bottom)/(stk->item_size);
+  stk->index = bottom;
+  printf("blocks: %ld\n", blocks);
+  stack_copy(defs, stk, blocks);
+  int retsym = SYMRET;
+  PUTINT(defs, &retsym);
+  stk->index = bottom;
+  printf("Byebye %ld %ld\n",top, bottom);
 }
 
 
-typedef void (*compfn)(stack *, stack *, stack *);
+typedef void (*compfn)(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap);
 
 compfn *make_comp_ptr(compfn fn){
   compfn *p = NEW(compfn);
@@ -123,17 +121,17 @@ stack *compile(char ** source){
   stack *stk = new_stack(STACK_ITEM_SIZE, 1 << 10);
   stack *links = new_stack(STACK_ITEM_SIZE, 1 << 10);
   stack *defs = new_stack(STACK_ITEM_SIZE, 1 << 10);
-  map_t *mains_map;
-  mains_map = hashmap_new();  
+  map_t *cmap = hashmap_new();
+  map_t *rmap = hashmap_new();
   printf("start compile\n");
-  hashmap_put(mains_map, ":", make_comp_ptr(&cColon));
-  hashmap_put(mains_map, ";", make_comp_ptr(&cSemiColon));
+  hashmap_put(cmap, ":", make_comp_ptr(&cColon));
+  hashmap_put(cmap, ";", make_comp_ptr(&cSemiColon));
 
   while((word = *(source++)) != NULL){
     printf("compiling: %s\n", word);
-    cVal = get_comp(mains_map, word);
+    cVal = get_comp(cmap, word);
     if(cVal != NULL){
-      (*cVal)(stk, links, defs);
+      (*cVal)(stk, links, defs, cmap, cmap);
     }
     //cVal = cWords->get(word, NULL);
     //rVal = rWords->get(word, NULL);
@@ -184,6 +182,9 @@ stack *compile(char ** source){
   free_stack(defs);
   free_stack(stk);
   free_stack(links);
+  hashmap_free(cmap);
+  hashmap_free(rmap);
+    
   //return dataspace;
   return NULL;
 }
