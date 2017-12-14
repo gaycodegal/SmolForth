@@ -120,9 +120,9 @@ compfn *get_comp(map_t *map, char *key){
 stack *compile(char ** source){
   char * word;
   compfn *cVal;
-  stack *stk = new_stack(sizeof(int), 1 << 10);
-  stack *links = new_stack(sizeof(int), 1 << 10);
-  stack *defs = new_stack(sizeof(int), 1 << 10);
+  stack *stk = new_stack(STACK_ITEM_SIZE, 1 << 10);
+  stack *links = new_stack(STACK_ITEM_SIZE, 1 << 10);
+  stack *defs = new_stack(STACK_ITEM_SIZE, 1 << 10);
   map_t *mains_map;
   mains_map = hashmap_new();  
   printf("start compile\n");
@@ -264,10 +264,24 @@ void interp(stack *dataspace){
 }
 
 
-
+int max_int(int n, ...){
+  va_list args;
+  int max, t;
+  if(n < 1)
+    return 0;
+  va_start(args, n);
+  max = (int)(va_arg(args, int));
+  while(--n){
+    t = (int)(va_arg(args, int));
+    if(t > max)
+      max = t;
+  }
+  return max;
+}
 
 
 int main(int argc, char **argv){
+  STACK_ITEM_SIZE = max_int(1, sizeof(int));
   printf("hi\n");
   char **words = split_words(": THREE getInt if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin
