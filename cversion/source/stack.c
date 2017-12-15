@@ -61,7 +61,8 @@ void *get_stack(stack *s){
   printf("index: %ld\n", (s->index));
   if(s->index >= s->length)
     return NULL;
-  return s->data + s->index;
+  ++(s->index);
+  return s->data + s->index - 1;
 }
 
 int stack_main(){

@@ -1,9 +1,17 @@
 #include "main.h"
-#include "hashmap.h"
 
-typedef struct s_fnptr {
-  
-} fnptr;
+runfn *rundefs;
+
+struct s_runfn {
+  runfn fn;
+  const char *name;
+};
+
+
+static const struct s_runfn builtins [] = {
+  {rAdd, "+"},
+  {NULL, NULL}
+};
 
 /*
   mains_map = hashmap_new();
@@ -80,13 +88,23 @@ void cColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   printf("HIHI\n");
 }
 
+//needs more work
+//currently doesn't do word naming
 void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   size_t top = stk->index;
   size_t bottom = *POPINT(links);
   size_t blocks = (top - bottom)/(stk->item_size);
   stk->index = bottom;
   printf("blocks: %ld\n", blocks);
-  stack_copy(defs, stk, blocks);
+  if(blocks < 2)
+    return;
+  if(*GETINT(stk) != SYMSTR){
+    stk->index = bottom;
+    return;
+  }
+  //const char *name = stack_get_str(stk);
+  stk->index = bottom;
+  stack_copy(defs, stk, blocks - 2);
   int retsym = SYMRET;
   PUTINT(defs, &retsym);
   stk->index = bottom;
@@ -94,7 +112,11 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
 }
 
 
-typedef void (*compfn)(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap);
+void rAdd(stack *stk, stack *links){
+  int a = *POPINT(stk);
+  a = *POPINT(stk) + a;
+  PUTINT(stk, &a);
+}
 
 compfn *make_comp_ptr(compfn fn){
   compfn *p = NEW(compfn);
@@ -102,13 +124,28 @@ compfn *make_comp_ptr(compfn fn){
   return p;
 }
 
+int *make_int_ptr(int i){
+  int *p = NEW(int);
+  *p = i;
+  return p;
+}
+
 compfn *get_comp(map_t *map, char *key){
-  any_t p[1];
-  int status = hashmap_get(map, key, p);
+  any_t p;
+  int status = hashmap_get(map, key, &p);
   if(status != MAP_OK){
     return NULL;
   }
-  return (compfn *)*p;
+  return (compfn *)p;
+}
+
+int *get_int(map_t *map, char *key){
+  any_t p;
+  int status = hashmap_get(map, key, &p);
+  if(status != MAP_OK){
+    return NULL;
+  }
+  return (int *)p;
 }
 
 /**
@@ -117,7 +154,9 @@ compfn *get_comp(map_t *map, char *key){
 */
 stack *compile(char ** source){
   char * word;
+  int t, v;
   compfn *cVal;
+  int *rVal;
   stack *stk = new_stack(STACK_ITEM_SIZE, 1 << 10);
   stack *links = new_stack(STACK_ITEM_SIZE, 1 << 10);
   stack *defs = new_stack(STACK_ITEM_SIZE, 1 << 10);
@@ -126,30 +165,40 @@ stack *compile(char ** source){
   printf("start compile\n");
   hashmap_put(cmap, ":", make_comp_ptr(&cColon));
   hashmap_put(cmap, ";", make_comp_ptr(&cSemiColon));
-
+  //use int vs neg int
+  struct s_runfn *builtin = (struct s_runfn*)builtins;
+  t = -1;
+  while(builtin->name != NULL){
+    hashmap_put(rmap, (builtin->name), make_int_ptr(t));
+    --t;
+    builtin++;
+  }
+  
   while((word = *(source++)) != NULL){
     printf("compiling: %s\n", word);
     cVal = get_comp(cmap, word);
+    rVal = get_int(rmap, word);
     if(cVal != NULL){
       (*cVal)(stk, links, defs, cmap, cmap);
-    }
-    //cVal = cWords->get(word, NULL);
-    //rVal = rWords->get(word, NULL);
-    /*
-    if(cVal != NULL){
-      if(cVal == int){
-	interpC(stack, links, defs, cWords, rWords);
-      }else{
-	cVal(stack, links, defs, cWords, rWords);
-      }
     }else if(rVal != NULL){
-	
-      if(rVal == int){
-	stack.append(SYMRUCALL);
-	stack.append(rVal);        
+      v = *rVal;
+      if(v < 0){
+	v = ~v; // v = -v + 1;
+	t = SYMRCALL;
+	PUTINT(stk, &t);
+	PUTINT(stk, &v);
       }else{
-	stack.append(SYMRCALL);
-	stack.append(rVal[0]);
+	t = SYMRUCALL;
+	PUTINT(stk, &t);
+	PUTINT(stk, &v);
+      }
+      printf("hi?\n");
+      //stack.append(SYMRUCALL);
+      //      stack.append(rVal);
+    }
+	/*      }else{
+	stack.append(SYMRUCALL);
+	stack.append(rVal);
       }
     }else{
       int len = strlen(word);
@@ -281,10 +330,12 @@ int max_int(int n, ...){
 }
 
 
+
+ 
 int main(int argc, char **argv){
   STACK_ITEM_SIZE = max_int(1, sizeof(int));
   printf("hi\n");
-  char **words = split_words(": THREE getInt if NOTZERO else ZERO then ; THREE .");
+  char **words = split_words(": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin
   interp(compiled);
   stack_main();
@@ -293,3 +344,4 @@ int main(int argc, char **argv){
   free_words(words);
   return 0;
 }
+ 
