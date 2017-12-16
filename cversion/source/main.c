@@ -12,28 +12,6 @@ static const struct s_runfn builtins [] = {
   {NULL, NULL}
 };
 
-/*
-  mains_map = hashmap_new();
-  hashmap_put(mains_map, "battle", make_mptr(&battle_main));
-  hashmap_put(mains_map, "graphics", make_mptr(&graphics_main));
-  hashmap_put(mains_map, "filereader", make_mptr(&filereader_main));
-  hashmap_put(mains_map, "attacks", make_mptr(&attacks_main));
-  hashmap_put(mains_map, "prompt", make_mptr(&prompt_main));
-  if(argc == 2)
-    status = hashmap_get(mains_map, argv[1], p);
-  if(status != MAP_OK){
-    printf("usage: %s <mode>\n", *argv);
-    printf("modes: battle, graphics, filereader, attacks, prompt\n");
-    return 1;
-  }else{
-    f = *(mainfn *)*p;
-    status = f();
-  }
-  hashmap_iterate(mains_map, &free_mptr, NULL);
-  hashmap_free(mains_map);
-
-*/
-
 char **split_words(char *source){
   int num_words = 0, end_words;
   size_t len;
@@ -71,7 +49,7 @@ char **split_words(char *source){
   return result;
 }
 
-char * free_words(char **words){
+void free_words(char **words){
   char **t = words;
   char *word;
   while((word = *(t++))){
@@ -85,8 +63,6 @@ void cColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   PUTINT(links, &top);
 }
 
-//needs more work
-//currently doesn't do word naming
 void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   size_t top = stk->index;
   size_t bottom = *POPINT(links);
@@ -108,7 +84,6 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
   stk->index = bottom;
   //memset(stk->data + stk->index, 0, stk->item_size * blocks);
 }
-
 
 void rAdd(stack *stk, stack *links){
   int a = *POPINT(stk);
