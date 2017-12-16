@@ -75,7 +75,6 @@ char * free_words(char **words){
   char **t = words;
   char *word;
   while((word = *(t++))){
-    printf("free: '%s'\n", word);
     free(word);
   }
   free(words);
@@ -84,7 +83,6 @@ char * free_words(char **words){
 void cColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   int top = (stk->index);
   PUTINT(links, &top);
-  printf("HIHI\n");
 }
 
 //needs more work
@@ -108,7 +106,7 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
   int retsym = SYMRET;
   PUTINT(defs, &retsym);
   stk->index = bottom;
-  printf("Byebye %ld %ld\n",top, bottom);
+  //memset(stk->data + stk->index, 0, stk->item_size * blocks);
 }
 
 
@@ -175,7 +173,7 @@ stack *compile(char ** source){
   }
   
   while((word = *(source++)) != NULL){
-    printf("compiling: %s\n", word);
+    //printf("compiling: %s\n", word);
     cVal = get_comp(cmap, word);
     rVal = get_int(rmap, word);
     if(cVal != NULL){
@@ -252,20 +250,16 @@ stack *compile(char ** source){
 	stack.append(word);
       }
       }*/
-    print_stack(stk);
+    //print_stack(stk);
   }
   stack *dataspace = new_stack(STACK_ITEM_SIZE, stk->index/stk->item_size + defs->index/defs->item_size + 1);
   v = (int)(defs->index);
   PUTINT(dataspace, &v);
   size_t copylen = defs->index;
   defs->index = 0;
-  printf("copying: %ld\n", copylen/defs->item_size);
-  print_stack(defs);
   stack_copy(dataspace, defs, copylen/defs->item_size);
   copylen = stk->index;
   stk->index = 0;
-  printf("copying: %ld\n", copylen/stk->item_size);
-  print_stack(stk);
   stack_copy(dataspace, stk, copylen/stk->item_size);
   free_stack(defs);
   free_stack(stk);
@@ -373,13 +367,11 @@ int max_int(int n, ...){
  
 int main(int argc, char **argv){
   STACK_ITEM_SIZE = max_int(2, sizeof(int), sizeof(char *));
-  printf("hi\n");
   char **words = split_words(": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin
   interp(compiled);
   free_stack(compiled);
-  stack_main();
-  printf("bye\n");
+  printf("ok\n");
   free_words(words);
   return 0;
 }

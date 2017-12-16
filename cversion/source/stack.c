@@ -38,13 +38,13 @@ void stack_copy(stack *dst, stack *src, size_t n){
   minsize = sisize;
   if(sisize > disize)
     minsize = disize;
-  ddata = dst->data + src->index;
-  sdata = src->data + dst->index;
+  ddata = dst->data + dst->index;
+  sdata = src->data + src->index;
   times = n;
   while(times--){
     memcpy(ddata, sdata, minsize);
     ddata += disize;
-    sisize += sisize;
+    sdata += sisize;
   }
   src->index += n * sisize;
   dst->index += n * disize;
@@ -60,7 +60,7 @@ void *pop_stack(stack *s){
 
 void print_stack(stack *s){
   for(size_t i = 0; i < s->length; i += s->item_size){
-    printf("%ld ", *(s->data + i));
+    printf("%ld ", *(long *)(s->data + i));
   }
   printf("\n");
 }
