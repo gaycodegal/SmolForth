@@ -121,10 +121,6 @@ int *get_int(map_t *map, char *key){
   return (int *)p;
 }
 
-/**
-   takes in a iterable which returns the separated words
-   and compiles it into bytecode
-*/
 stack *compile(char ** source){
   char * word, *str;
   int t, v;
@@ -192,8 +188,16 @@ stack *compile(char ** source){
       }else{
 	t = SYMSTR;
 	PUTINT(stk, &t);
-	str = strdup(word);
-	PUTSTR(stk, &str);
+	PUTSTR(stk, &word);
+	/* 
+	   words will have to be later searched 
+	   for and given their own data section
+	   or ignored entirely.
+	   Not allocating a new word means if we ignore them
+	   we at least won't have memory leaks
+	*/
+	
+	
       //printf("put str %s top:%ld\n", word, stk->index);
       
       }
@@ -245,10 +249,6 @@ stack *compile(char ** source){
   return dataspace;
 }
 
-/**
-   Takes a bytecode compiled forth program definition <dataspace>
-   forth program definition structure described in the README
-*/
 void interp(stack *dataspace){
   print_stack(dataspace);
   /*stack *stk = new_stack();
