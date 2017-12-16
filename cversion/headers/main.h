@@ -27,6 +27,11 @@ typedef void (*runfn)(stack *stk, stack *links);
 void rAdd(stack *stk, stack *links);
 
 /**
+   prints the top (int) of the stack.
+ */
+void rDot(stack *stk, stack *links);
+
+/**
    makes a pointer to an integer
  */
 int *make_int_ptr(int i);

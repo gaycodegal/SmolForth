@@ -9,6 +9,7 @@ struct s_runfn {
 
 static const struct s_runfn builtins [] = {
   {rAdd, "+"},
+  {rDot, "."},
   {NULL, NULL}
 };
 
@@ -77,7 +78,6 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
   char *name = *GETSTR(stk);
   hashmap_put(rmap, name, make_int_ptr(defs->index));
   printf("new fn named: %s\n", name);
-  stk->index = bottom;
   stack_copy(defs, stk, blocks - 2);
   int retsym = SYMRET;
   PUTINT(defs, &retsym);
@@ -89,6 +89,11 @@ void rAdd(stack *stk, stack *links){
   int a = *POPINT(stk);
   a = *POPINT(stk) + a;
   PUTINT(stk, &a);
+}
+
+void rDot(stack *stk, stack *links){
+  int a = *POPINT(stk);
+  printf("%i\n", a);
 }
 
 compfn *make_comp_ptr(compfn fn){
@@ -232,7 +237,7 @@ stack *compile(char ** source){
     //print_stack(stk);
   }
   stack *dataspace = new_stack(STACK_ITEM_SIZE, stk->index/stk->item_size + defs->index/defs->item_size + 1);
-  v = (int)(defs->index);
+  v = (int)(defs->index/defs->item_size);
   PUTINT(dataspace, &v);
   size_t copylen = defs->index;
   defs->index = 0;
@@ -250,34 +255,39 @@ stack *compile(char ** source){
 }
 
 void interp(stack *dataspace){
-  print_stack(dataspace);
-  /*stack *stk = new_stack();
-  stack *links = new_stack();
-  int i = *(int *)(dataspace->data);
-  int DATASTART = 1;
-  int ldata = dataspace->len;
+  //print_stack(dataspace);
+  stack *stk = new_stack(STACK_ITEM_SIZE, 30);
+  stack *links = new_stack(STACK_ITEM_SIZE, 30);
+  dataspace->index = 0;
+  dataspace->index = *GETINT(dataspace) * dataspace->item_size;
+  int DATASTART = 1 * dataspace->item_size;
+  int ldata = dataspace->length;
   unsigned char sym;
-  int runnning = true;
+  int running = 1;
   int ind;
-  char *str;
-  i += DATASTART;
-
-  while(i < ldata && running){
-    sym = dataspace[i++];
+  int str;
+  int d;
+  int cond;
+  dataspace->index += DATASTART;
+  //printf("i: %i\n", dataspace->index);
+  while(dataspace->index < ldata && running){
+    sym = *GETINT(dataspace);
+    //printf("sym: %i\n", sym);
     switch(sym){
     case SYMHALT:
-      running = false;
+      running = 0;
       break;
       
     case SYMRUCALL:
-      ind = stack_getInt(dataspace);
-      stack_putInt(links, i);
-      i = ind + DATASTART;
+      ind = *GETINT(dataspace);
+      d = dataspace->index;
+      PUTINT(links, &d);
+      dataspace->index = ind + DATASTART;
       break;
       
     case SYMRCALL:
-      ind = stack_getInt(dataspace);
-      rWordDefs[fun](stack, links);
+      ind = *GETINT(dataspace);
+      rundefs[ind](stk, links);
       break;
       
     case SYMCUCALL:
@@ -286,29 +296,29 @@ void interp(stack *dataspace){
       break;
       
     case SYMINT:
-      d = stack_getInt(dataspace);
-      stack_putInt(stk, d);
+      d = *GETINT(dataspace);
+      PUTINT(stk, &d);
       break;
       
     case SYMSTR:
-      str = stack_getStrCpy(dataspace);
-      stack_putStr(stk, str);
+      str = *GETINT(dataspace);
+      //stack_putStr(stk, str);
       break;
       
     case SYMRET:
-      i = stack_popInt(links);
+      dataspace->index = *POPINT(links);
       break;
       
     case SYMRBRANCH:
-      jmp = stack_getInt(dataspace);
-      cond = stack_popInt(stk);
+      d = *GETINT(dataspace);
+      cond = *GETINT(dataspace);
       if (cond == 0){
-	i += jmp;
+	dataspace->index += d;
       }
       break;
     case SYMRJUMP:
-      jmp = stack_getInt(dataspace);
-      i += jmp;
+      d = *GETINT(dataspace);
+      dataspace->index += d;
       break;
       
     default:
@@ -316,9 +326,9 @@ void interp(stack *dataspace){
       break;
     }
   }
-  free_stack(stack);
+  free_stack(stk);
   free_stack(links);
-  */
+  
 }
 
 
@@ -338,11 +348,24 @@ int max_int(int n, ...){
 }
 
 
-
- 
 int main(int argc, char **argv){
   STACK_ITEM_SIZE = max_int(2, sizeof(int), sizeof(char *));
-  char **words = split_words(": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
+  struct s_runfn *builtin = (struct s_runfn*)builtins;
+  int t = 0;
+  while(builtin->name != NULL){
+    t++;
+    builtin++;
+  }
+  builtin = (struct s_runfn*)builtins;
+  rundefs = MALLOC(runfn, t);
+  t = 0;
+  while(builtin->name != NULL){
+    rundefs[t] = (builtin->fn);
+    t++;
+    builtin++;
+  }
+  char **words = split_words(": THREE 1 2 + ; THREE THREE + .");
+			     //": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin
   interp(compiled);
   free_stack(compiled);
