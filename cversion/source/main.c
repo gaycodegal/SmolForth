@@ -58,6 +58,42 @@ void free_words(char **words){
   }
   free(words);
 }
+    
+void cIf(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
+  int t = 0;
+  PUTINT(stk, &t);
+  PUTINT(stk, &t);
+  t = stk->index;
+  PUTINT(links, &t);
+}
+    
+void cElse(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
+  int t = 0;
+  PUTINT(stk, &t);
+  PUTINT(stk, &t);
+  t = stk->index;
+  PUTINT(links, &t);
+}
+
+void cThen(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
+  int t;
+  int top = stk->index;
+  int mid = *POPINT(links);
+  int bottom = *POPINT(links);
+  stk->index = bottom - 2 * stk->item_size;
+  t = SYMRBRANCH;
+  PUTINT(stk, &t);
+  t = (mid - bottom) / stk->item_size;
+  PUTINT(stk, &t);
+
+  stk->index = mid - 2 * stk->item_size;
+  t = SYMRJUMP;
+  PUTINT(stk, &t);
+  t = (top - mid) / stk->item_size;
+  PUTINT(stk, &t);
+
+  stk->index = top;
+}    
 
 void cColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   int top = (stk->index);
@@ -77,7 +113,7 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
   }
   char *name = *GETSTR(stk);
   hashmap_put(rmap, name, make_int_ptr(defs->index));
-  printf("new fn named: %s\n", name);
+  //printf("new fn named: %s\n", name);
   stack_copy(defs, stk, blocks - 2);
   int retsym = SYMRET;
   PUTINT(defs, &retsym);
@@ -131,14 +167,17 @@ stack *compile(char ** source){
   int t, v;
   compfn *cVal;
   int *rVal;
-  stack *stk = new_stack(STACK_ITEM_SIZE, 30);
-  stack *links = new_stack(STACK_ITEM_SIZE, 30);
-  stack *defs = new_stack(STACK_ITEM_SIZE, 30);
+  stack *stk = new_stack(STACK_ITEM_SIZE, 100);
+  stack *links = new_stack(STACK_ITEM_SIZE, 100);
+  stack *defs = new_stack(STACK_ITEM_SIZE, 100);
   map_t *cmap = hashmap_new();
   map_t *rmap = hashmap_new();
   printf("start compile\n");
   hashmap_put(cmap, ":", make_comp_ptr(&cColon));
   hashmap_put(cmap, ";", make_comp_ptr(&cSemiColon));
+  hashmap_put(cmap, "if", make_comp_ptr(&cIf));
+  hashmap_put(cmap, "else", make_comp_ptr(&cElse));
+  hashmap_put(cmap, "then", make_comp_ptr(&cThen));
   //use int vs neg int
   struct s_runfn *builtin = (struct s_runfn*)builtins;
   t = -1;
@@ -268,6 +307,7 @@ void interp(stack *dataspace){
   int str;
   int d;
   int cond;
+  size_t jmp;
   dataspace->index += DATASTART;
   //printf("i: %i\n", dataspace->index);
   while(dataspace->index < ldata && running){
@@ -310,21 +350,23 @@ void interp(stack *dataspace){
       break;
       
     case SYMRBRANCH:
-      d = *GETINT(dataspace);
-      cond = *GETINT(dataspace);
+      jmp = *GETINT(dataspace) * stk->item_size;
+      cond = *POPINT(stk);
       if (cond == 0){
-	dataspace->index += d;
+	dataspace->index += jmp;
       }
       break;
     case SYMRJUMP:
-      d = *GETINT(dataspace);
-      dataspace->index += d;
+      jmp = *GETINT(dataspace) * stk->item_size;
+      dataspace->index += jmp;
       break;
       
     default:
       printf("err\n");
       break;
     }
+    //printf("stack:"), print_stack(stk);
+    //printf("links:"), print_stack(links);
   }
   free_stack(stk);
   free_stack(links);
@@ -364,8 +406,9 @@ int main(int argc, char **argv){
     t++;
     builtin++;
   }
-  char **words = split_words(": THREE 1 2 + ; THREE THREE + .");
-			     //": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
+  char **words = split_words(": THREE 0 + if 30 else 40 then ; 1 THREE 0 THREE + .");
+  //": THREE 1 2 + ; THREE THREE + .");
+  //": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin
   interp(compiled);
   free_stack(compiled);
