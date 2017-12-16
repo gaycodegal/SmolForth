@@ -14,5 +14,6 @@ typedef void (*compfn)(stack *stk, stack *links, stack *defs, map_t *cmap, map_t
 typedef void (*runfn)(stack *stk, stack *links);
 
 void rAdd(stack *stk, stack *links);
+int *make_int_ptr(int i);
 
 #endif

@@ -2,9 +2,10 @@
 
 stack *new_stack(size_t item_size, size_t size){
   stack *s = NEW(stack);
-  s->data = MALLOC(char, size);
+  s->data = MALLOC(char, size * item_size);
+  memset(s->data, 0, size * item_size);
   s->index = 0;
-  s->length = size;
+  s->length = size * item_size;
   s->item_size = item_size;
 }
 
@@ -19,7 +20,7 @@ void put_stack(stack *s, void *p, size_t size){
   }
   memcpy(s->data + s->index, p, size);
   s->index += s->item_size;
-  printf("index: %ld\n", (s->index));
+  //printf("index: %ld\n", (s->index));
 }
 
 void stack_copy(stack *dst, stack *src, size_t n){
@@ -57,12 +58,19 @@ void *pop_stack(stack *s){
   return s->data + s->index;
 }
 
+void print_stack(stack *s){
+  for(size_t i = 0; i < s->length; i += s->item_size){
+    printf("%ld ", *(s->data + i));
+  }
+  printf("\n");
+}
+
 void *get_stack(stack *s){
-  printf("index: %ld\n", (s->index));
+  //printf("index: %ld\n", (s->index));
   if(s->index >= s->length)
     return NULL;
-  ++(s->index);
-  return s->data + s->index - 1;
+  s->index += s->item_size;
+  return s->data + s->index - s->item_size;
 }
 
 int stack_main(){

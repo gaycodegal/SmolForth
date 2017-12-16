@@ -6,7 +6,9 @@
 #include <string.h>
 #define PUTINT(STACK, VAL) put_stack((STACK), (VAL), sizeof(int))
 #define PUTCHAR(STACK, VAL) put_stack((STACK), (VAL), sizeof(char))
+#define PUTSTR(STACK, VAL) put_stack((STACK), (VAL), sizeof(char *))
 #define GETINT(STACK) ((int *)get_stack((STACK)))
+#define GETSTR(STACK) ((char **)get_stack((STACK)))
 #define POPINT(STACK) ((int *)pop_stack((STACK)))
 
 typedef struct s_stack {
@@ -58,6 +60,11 @@ void *get_stack(stack *s);
    if item sizes differ, uses smaller as transfer unit.
 */
 void stack_copy(stack *dest, stack *source, size_t n);
+
+/**
+   prints out the contents of a stack as integers;
+ */
+void print_stack(stack *s);
 
 /**
    some little tests

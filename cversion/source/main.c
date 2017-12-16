@@ -4,9 +4,8 @@ runfn *rundefs;
 
 struct s_runfn {
   runfn fn;
-  const char *name;
+  char *name;
 };
-
 
 static const struct s_runfn builtins [] = {
   {rAdd, "+"},
@@ -95,14 +94,15 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
   size_t bottom = *POPINT(links);
   size_t blocks = (top - bottom)/(stk->item_size);
   stk->index = bottom;
-  printf("blocks: %ld\n", blocks);
   if(blocks < 2)
     return;
   if(*GETINT(stk) != SYMSTR){
     stk->index = bottom;
     return;
   }
-  //const char *name = stack_get_str(stk);
+  char *name = *GETSTR(stk);
+  hashmap_put(rmap, name, make_int_ptr(defs->index));
+  printf("new fn named: %s\n", name);
   stk->index = bottom;
   stack_copy(defs, stk, blocks - 2);
   int retsym = SYMRET;
@@ -153,13 +153,13 @@ int *get_int(map_t *map, char *key){
    and compiles it into bytecode
 */
 stack *compile(char ** source){
-  char * word;
+  char * word, *str;
   int t, v;
   compfn *cVal;
   int *rVal;
-  stack *stk = new_stack(STACK_ITEM_SIZE, 1 << 10);
-  stack *links = new_stack(STACK_ITEM_SIZE, 1 << 10);
-  stack *defs = new_stack(STACK_ITEM_SIZE, 1 << 10);
+  stack *stk = new_stack(STACK_ITEM_SIZE, 30);
+  stack *links = new_stack(STACK_ITEM_SIZE, 30);
+  stack *defs = new_stack(STACK_ITEM_SIZE, 30);
   map_t *cmap = hashmap_new();
   map_t *rmap = hashmap_new();
   printf("start compile\n");
@@ -179,7 +179,7 @@ stack *compile(char ** source){
     cVal = get_comp(cmap, word);
     rVal = get_int(rmap, word);
     if(cVal != NULL){
-      (*cVal)(stk, links, defs, cmap, cmap);
+      (*cVal)(stk, links, defs, cmap, rmap);
     }else if(rVal != NULL){
       v = *rVal;
       if(v < 0){
@@ -192,11 +192,40 @@ stack *compile(char ** source){
 	PUTINT(stk, &t);
 	PUTINT(stk, &v);
       }
-      printf("hi?\n");
       //stack.append(SYMRUCALL);
       //      stack.append(rVal);
+    }else{
+      int len = strlen(word);
+      /*if(len >= 2 && word[0] == '0' && (word[1] < '0' || word[1] > '9')){
+	t = SYMINT;
+	PUTINT(stk, &t);
+	switch(word[1]){
+	case 'b':
+	  stack.append(int(word[2:],2));
+	  break;
+	case 'o':
+	  stack.append(int(word[2:],8));
+	  break;
+	case 'x':
+	  stack.append(int(word[2:],16));
+	  break;
+	}
+	}else*/
+      if(len >= 1 && word[0] >= '0' && word[0] <= '9'){
+	t = SYMINT;
+	PUTINT(stk, &t);
+	v = atoi(word);
+	PUTINT(stk, &v);
+      }else{
+	t = SYMSTR;
+	PUTINT(stk, &t);
+	str = strdup(word);
+	PUTSTR(stk, &str);
+      //printf("put str %s top:%ld\n", word, stk->index);
+      
+      }
     }
-	/*      }else{
+    /*      }else{
 	stack.append(SYMRUCALL);
 	stack.append(rVal);
       }
@@ -223,19 +252,28 @@ stack *compile(char ** source){
 	stack.append(word);
       }
       }*/
+    print_stack(stk);
   }
-  /*stack *dataspace = new_stack(stack->len + defs->len + 1);
-  *(int *)(dataspace->data) = defs->len;
-  memcpy(dataspace->data + sizeof(int), defs->data, defs->len);
-  memcpy(dataspace->data + sizeof(int) + defs->len, stack->data, stack->len);*/
+  stack *dataspace = new_stack(STACK_ITEM_SIZE, stk->index/stk->item_size + defs->index/defs->item_size + 1);
+  v = (int)(defs->index);
+  PUTINT(dataspace, &v);
+  size_t copylen = defs->index;
+  defs->index = 0;
+  printf("copying: %ld\n", copylen/defs->item_size);
+  print_stack(defs);
+  stack_copy(dataspace, defs, copylen/defs->item_size);
+  copylen = stk->index;
+  stk->index = 0;
+  printf("copying: %ld\n", copylen/stk->item_size);
+  print_stack(stk);
+  stack_copy(dataspace, stk, copylen/stk->item_size);
   free_stack(defs);
   free_stack(stk);
   free_stack(links);
   hashmap_free(cmap);
   hashmap_free(rmap);
     
-  //return dataspace;
-  return NULL;
+  return dataspace;
 }
 
 /**
@@ -243,6 +281,7 @@ stack *compile(char ** source){
    forth program definition structure described in the README
 */
 void interp(stack *dataspace){
+  print_stack(dataspace);
   /*stack *stk = new_stack();
   stack *links = new_stack();
   int i = *(int *)(dataspace->data);
@@ -333,13 +372,13 @@ int max_int(int n, ...){
 
  
 int main(int argc, char **argv){
-  STACK_ITEM_SIZE = max_int(1, sizeof(int));
+  STACK_ITEM_SIZE = max_int(2, sizeof(int), sizeof(char *));
   printf("hi\n");
   char **words = split_words(": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin
   interp(compiled);
+  free_stack(compiled);
   stack_main();
-  //free_stack(compiled);
   printf("bye\n");
   free_words(words);
   return 0;
