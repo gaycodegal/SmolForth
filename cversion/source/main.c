@@ -7,9 +7,75 @@ struct s_runfn {
   char *name;
 };
 
+void rLT(stack *stk, stack *links){
+  int a = *POPINT(stk);
+  a = *POPINT(stk) < a;
+  PUTINT(stk, &a);
+}
+
+void rGT(stack *stk, stack *links){
+  int a = *POPINT(stk);
+  a = *POPINT(stk) > a;
+  PUTINT(stk, &a);
+}
+
+void rLE(stack *stk, stack *links){
+  int a = *POPINT(stk);
+  a = *POPINT(stk) <= a;
+  PUTINT(stk, &a);
+}
+
+void rGE(stack *stk, stack *links){
+  int a = *POPINT(stk);
+  a = *POPINT(stk) >= a;
+  PUTINT(stk, &a);
+}
+
+void rEQ(stack *stk, stack *links){
+  int a = *POPINT(stk);
+  a = *POPINT(stk) == a;
+  PUTINT(stk, &a);
+}
+
+void rSub(stack *stk, stack *links){
+  int a = *POPINT(stk);
+  a = *POPINT(stk) - a;
+  PUTINT(stk, &a);
+}
+
+void rDup(stack *stk, stack *links){
+  int v;
+  stk->index -= stk->item_size;
+  v = *GETINT(stk);
+  PUTINT(stk, &v);
+}
+
+void rRot(stack *stk, stack *links){
+  int v1, v2;
+  stk->index -= stk->item_size * 2;
+  v1 = *GETINT(stk);
+  v2 = *GETINT(stk);
+  stk->index -= stk->item_size * 2;
+  PUTINT(stk, &v2);
+  PUTINT(stk, &v1);
+}
+
+void rStack(stack *stk, stack *links){
+  printf("stack (%ld): ", stk->index / stk->item_size), print_stack(stk);
+}
+
 static const struct s_runfn builtins [] = {
   {rAdd, "+"},
+  {rSub, "-"},
   {rDot, "."},
+  {rDup, "dup"},
+  {rRot, "rot"},
+  {rEQ, "=="},
+  {rLT, "<"},
+  {rGT, ">"},
+  {rLE, "<="},
+  {rGE, ">="},
+  {rStack, "stack"},
   {NULL, NULL}
 };
 
@@ -129,6 +195,7 @@ void rAdd(stack *stk, stack *links){
 
 void rDot(stack *stk, stack *links){
   int a = *POPINT(stk);
+  stk->index += stk->item_size;  
   printf("%i\n", a);
 }
 
@@ -287,9 +354,82 @@ stack *compile(char ** source){
   free_stack(defs);
   free_stack(stk);
   free_stack(links);
+  dataspace = secondpass(dataspace, rmap);
   hashmap_free(cmap);
   hashmap_free(rmap);
     
+  return dataspace;
+}
+
+stack *secondpass(stack *dataspace, map_t *rmap){
+  int DATASTART = 1 * dataspace->item_size;
+  dataspace->index = DATASTART;
+  int ldata = dataspace->length;
+  unsigned char sym;
+  char *word;
+  int *rVal, v, t;
+  while(dataspace->index < ldata){
+    sym = *GETINT(dataspace);
+    //printf("at %ld: %i\n", dataspace->index / dataspace->item_size, sym);
+    switch(sym){
+    case SYMHALT:
+      break;
+      
+    case SYMRUCALL:
+      dataspace->index += dataspace->item_size;
+      break;
+      
+    case SYMRCALL:
+      dataspace->index += dataspace->item_size;
+      break;
+      
+    case SYMCUCALL:
+      dataspace->index += dataspace->item_size;
+      break;
+    case SYMCCALL:
+      dataspace->index += dataspace->item_size;
+      break;
+      
+    case SYMINT:
+      dataspace->index += dataspace->item_size;
+      break;
+      
+    case SYMSTR:
+      word = *GETSTR(dataspace);
+      rVal = get_int(rmap, word);
+      if(rVal == NULL){
+	break;
+      }
+      v = *rVal;
+      dataspace->index -= dataspace->item_size * 2;
+      if(v < 0){
+	v = ~v; // v = -v + 1;
+	t = SYMRCALL;
+	PUTINT(dataspace, &t);
+	PUTINT(dataspace, &v);
+      }else{
+	t = SYMRUCALL;
+	PUTINT(dataspace, &t);
+	PUTINT(dataspace, &v);
+      }
+      break;
+      
+    case SYMRET:
+      break;
+      
+    case SYMRBRANCH:
+      dataspace->index += dataspace->item_size;
+      break;
+    case SYMRJUMP:
+      dataspace->index += dataspace->item_size;
+      break;
+      
+    default:
+      printf("err\n");
+      break;
+    }
+    
+  }
   return dataspace;
 }
 
@@ -406,7 +546,9 @@ int main(int argc, char **argv){
     t++;
     builtin++;
   }
-  char **words = split_words(": TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .");
+  char **words = split_words(": FIB dup 1 <= if else dup 1 - FIB rot 2 - FIB + then ; 6 FIB .");
+  //
+  //": TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .");
   //": THREE 1 2 + ; THREE THREE + .");
   //": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin

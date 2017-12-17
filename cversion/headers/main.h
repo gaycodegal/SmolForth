@@ -75,6 +75,12 @@ int *get_int(map_t *map, char *key);
 stack *compile(char ** source);
 
 /**
+   meant to do things like enable recursion
+   and handle strings
+ */
+stack *secondpass(stack *dataspace, map_t *rmap);
+
+/**
    Takes a bytecode compiled forth program definition <dataspace>
    forth program definition structure described in the README
 */

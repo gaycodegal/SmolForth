@@ -4,10 +4,17 @@
 
 Programs are currently injected into the main function in main.c for testing purposes.
 
-`: TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .` yields the output:
+Basic if statement testing - `: TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .` yields the output:
 
     70
     ok
+
+Basic recursion test - `: FIB dup 1 <= if else dup 1 - FIB rot 2 - FIB + then ; 6 FIB .` yields the output:
+
+    8
+    ok
+
+
 
 ## Compilation
 
