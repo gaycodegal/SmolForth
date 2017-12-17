@@ -172,7 +172,7 @@ stack *compile(char ** source){
   stack *defs = new_stack(STACK_ITEM_SIZE, 100);
   map_t *cmap = hashmap_new();
   map_t *rmap = hashmap_new();
-  printf("start compile\n");
+  //printf("start compile\n");
   hashmap_put(cmap, ":", make_comp_ptr(&cColon));
   hashmap_put(cmap, ";", make_comp_ptr(&cSemiColon));
   hashmap_put(cmap, "if", make_comp_ptr(&cIf));
@@ -406,7 +406,7 @@ int main(int argc, char **argv){
     t++;
     builtin++;
   }
-  char **words = split_words(": THREE 0 + if 30 else 40 then ; 1 THREE 0 THREE + .");
+  char **words = split_words(": TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .");
   //": THREE 1 2 + ; THREE THREE + .");
   //": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin

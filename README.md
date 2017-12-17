@@ -1,7 +1,8 @@
 # SmolForth
 
-A little forth interpreter in python. Will soon move to C
-Ignore the C version. it is in progress at present.
+A little Forth interpreter in C. Original draft in python.
+
+C version functional, but still adding features. See the C Version's README for more details on progress.
 
 ## Forth Bytecode Structure
 

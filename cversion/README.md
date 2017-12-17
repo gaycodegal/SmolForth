@@ -1,5 +1,24 @@
 # C Forth Version
 
+## Example Programs
+
+Programs are currently injected into the main function in main.c for testing purposes.
+
+`: TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .` yields the output:
+
+    70
+    ok
+
+## Compilation
+
+I've been working in linux (Ubuntu xenial). To compile simply run `make` in the cversion directory.
+
+## Running
+
+Once the program is compiled, it can be run with the command `./main` in the cversion folder.
+
+## Notes
+
 Currently need to make the compiled output stable enough to be possibly saved to a file. File extension will likely by `.c4` for compiled Forth. `.c4` files will be specific to the platform they are compiled on, and thus should never be included in a build.
 
 In order to make this Forth implementation usable, we need to do something about the pointers I leave lying around to unassigned words. For now, we can safely ignore SYMSTR because they will never end up being used in runtime - only for compile time function naming conventions.
@@ -8,7 +27,9 @@ The intended purpose for this Forth implementation is for using in formatting co
 
 I can't see why for-loops would be useful, but I should include them just in case.
 
-Thus, features needed to make this a useful implementation include:
+## Future Work
+
+Features needed to make this a useful implementation include:
 - Stack swapping.
 - Stack rotation (rotate n elements by m places).
 - Duplication:
