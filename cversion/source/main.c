@@ -50,6 +50,16 @@ void rDup(stack *stk, stack *links){
   PUTINT(stk, &v);
 }
 
+void rNRot(stack *stk, stack *links){
+  int length, delta;
+  size_t ind = stk->index;
+  delta = *POPINT(stk);
+  length = *POPINT(stk);
+  stk->index -= length * stk->item_size;
+  shift_stack(stk, length, delta);
+  stk->index = ind;
+}
+
 void rRot(stack *stk, stack *links){
   int v1, v2;
   stk->index -= stk->item_size * 2;
@@ -58,6 +68,22 @@ void rRot(stack *stk, stack *links){
   stk->index -= stk->item_size * 2;
   PUTINT(stk, &v2);
   PUTINT(stk, &v1);
+}
+
+void rPop(stack *stk, stack *links){
+  POPINT(stk);
+}
+
+void rNPop(stack *stk, stack *links){
+  long amt = (long)*POPINT(stk);
+  amt = (long)(stk->index)  - amt * (long)(stk->item_size);
+  //printf("index now : %i\n", (int)stk->index);
+  if(amt < 0)
+    stk->index = 0;
+  else if(amt > stk->length)
+    stk->index = stk->length;
+  else
+    stk->index = amt;
 }
 
 void rStack(stack *stk, stack *links){
@@ -70,6 +96,9 @@ static const struct s_runfn builtins [] = {
   {rDot, "."},
   {rDup, "dup"},
   {rRot, "rot"},
+  {rNRot, "nrot"},
+  {rPop, "pop"},
+  {rNPop, "npop"},
   {rEQ, "=="},
   {rLT, "<"},
   {rGT, ">"},
@@ -296,6 +325,11 @@ stack *compile(char ** source){
 	PUTINT(stk, &t);
 	v = atoi(word);
 	PUTINT(stk, &v);
+      }else if(len >= 2 && word[0] == '-' && word[1] >= '0' && word[1] <= '9'){
+	t = SYM_INT;
+	PUTINT(stk, &t);
+	v = atoi(word);
+	PUTINT(stk, &v);
       }else{
 	t = SYM_STR;
 	PUTINT(stk, &t);
@@ -357,7 +391,6 @@ stack *compile(char ** source){
   dataspace = secondpass(dataspace, rmap);
   hashmap_free(cmap);
   hashmap_free(rmap);
-    
   return dataspace;
 }
 
@@ -435,6 +468,7 @@ stack *secondpass(stack *dataspace, map_t *rmap){
 
 void interp(stack *dataspace){
   //print_stack(dataspace);
+
   stack *stk = new_stack(STACK_ITEM_SIZE, 30);
   stack *links = new_stack(STACK_ITEM_SIZE, 30);
   dataspace->index = 0;
@@ -546,12 +580,14 @@ int main(int argc, char **argv){
     t++;
     builtin++;
   }
-  char **words = split_words(": FIB dup 1 <= if else dup 1 - FIB rot 2 - FIB + then ; 6 FIB .");
+  char **words = split_words(": range dup 0 > if dup 1 - range else then ; 5 range 6 1 stack  nrot stack");
+  //char **words = split_words(": FIB dup 1 <= if else dup 1 - FIB rot 2 - FIB + then ; 6 FIB .");
   //
   //": TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .");
   //": THREE 1 2 + ; THREE THREE + .");
   //": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
   stack *compiled = compile(words);//words//#sys.stdin
+  //print_stack(compiled);
   interp(compiled);
   free_stack(compiled);
   printf("ok\n");

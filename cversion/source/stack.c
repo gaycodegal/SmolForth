@@ -2,8 +2,8 @@
 
 stack *new_stack(size_t item_size, size_t size){
   stack *s = NEW(stack);
-  s->data = MALLOC(char, size * item_size);
-  memset(s->data, 0, size * item_size);
+  s->data = MALLOC(char, (size) * item_size);
+  memset(s->data, 0, (size) * item_size);
   s->index = 0;
   s->length = size * item_size;
   s->item_size = item_size;
@@ -60,7 +60,7 @@ void *pop_stack(stack *s){
 
 void print_stack(stack *s){
   for(size_t i = 0; i < s->length; i += s->item_size){
-    printf("%ld ", *(long *)(s->data + i));
+    printf("%i ", *(int *)(s->data + i));
   }
   printf("\n");
 }
@@ -71,6 +71,44 @@ void *get_stack(stack *s){
     return NULL;
   s->index += s->item_size;
   return s->data + s->index - s->item_size;
+}
+
+void shift_stack(stack *stk, long len, long amt) { //smaller of 2 shift
+  size_t d, s, left, check, k, mx;
+  char t;
+  char * ary = stk->data;
+  size_t start = stk->index;
+  if(stk->index < 0)
+    return;
+  len *= stk->item_size;
+  if(len > stk->length - stk->index){
+    len = stk->length - stk->index;
+  }
+  amt *= stk->item_size;
+  amt = ((amt % len) + len) % len;
+  if (amt == 0)
+    return;
+  d = len - amt;
+  s = 0;
+  while (s < d) {
+    left = d - s;
+    check = amt > left;
+    if (check) {
+      amt = left;
+    }
+    for (k = d, mx = amt + d; k < mx; ++k) {
+      //swapping
+      t = ary[start + s];
+      ary[start + s] = ary[start + k];
+      ary[start + k] = t;
+      ++s;
+    }
+    if (check) {
+      d += amt;
+      amt = len - d;
+    }
+  }
+  return;
 }
 
 int stack_main(){

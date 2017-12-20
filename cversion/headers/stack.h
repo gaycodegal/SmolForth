@@ -61,6 +61,15 @@ void *get_stack(stack *s);
 */
 void stack_copy(stack *dest, stack *source, size_t n);
 
+
+/**
+   circular rotate the stack starting at
+   <stk->index> <amt> places to the right
+   inside the range <stk->index> (inclusive) to
+   <stk->index> + <len> (exclusive)
+ */
+void shift_stack(stack *stk, long len, long amt);
+
 /**
    prints out the contents of a stack as integers;
  */

@@ -42,7 +42,6 @@ Include an active error type (raised) and a (passive) error type. When a functio
 
 Features needed to make this a useful implementation include:
 - Stack swapping.
-- Stack rotation (rotate n elements by m places).
 - Duplication:
     - Duplicate top element.
     - Duplicate indexed element.
@@ -51,3 +50,7 @@ Features needed to make this a useful implementation include:
 - Some meaningful API to specify additional runtime functions and compile based on those.
 - Some concept of constants.
 - Anonymous functions (useful for having multiple execution starting points, as will happen with the intended usecase).
+
+## Done
+- Stack rotation (rotate n elements by m places).
+
