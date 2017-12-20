@@ -34,6 +34,10 @@ The intended purpose for this Forth implementation is for using in formatting co
 
 I can't see why for-loops would be useful, but I should include them just in case.
 
+## Error Handling (Future)
+
+Include an active error type (raised) and a (passive) error type. When a function is called, the user can decide to call it with errors on, and should an error occur, the function will skip its ret value and jump to the error handler. Error handlers, however, would need to be cleared before ret is called so that the program would not jump to the error handler immediately. I suppose that alternatively, we could have the ret jump to the error handler, and the error handler's first instruction would be to check for an active error raised and if no active errors, call ret itself. So something like a sym-ret-if-no-error SYMNERET.
+
 ## Future Work
 
 Features needed to make this a useful implementation include:

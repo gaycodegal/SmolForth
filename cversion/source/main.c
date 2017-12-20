@@ -147,13 +147,13 @@ void cThen(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   int mid = *POPINT(links);
   int bottom = *POPINT(links);
   stk->index = bottom - 2 * stk->item_size;
-  t = SYMRBRANCH;
+  t = SYM_RBRANCH;
   PUTINT(stk, &t);
   t = (mid - bottom) / stk->item_size;
   PUTINT(stk, &t);
 
   stk->index = mid - 2 * stk->item_size;
-  t = SYMRJUMP;
+  t = SYM_RJUMP;
   PUTINT(stk, &t);
   t = (top - mid) / stk->item_size;
   PUTINT(stk, &t);
@@ -173,7 +173,7 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
   stk->index = bottom;
   if(blocks < 2)
     return;
-  if(*GETINT(stk) != SYMSTR){
+  if(*GETINT(stk) != SYM_STR){
     stk->index = bottom;
     return;
   }
@@ -181,7 +181,7 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
   hashmap_put(rmap, name, make_int_ptr(defs->index));
   //printf("new fn named: %s\n", name);
   stack_copy(defs, stk, blocks - 2);
-  int retsym = SYMRET;
+  int retsym = SYM_RET;
   PUTINT(defs, &retsym);
   stk->index = bottom;
   //memset(stk->data + stk->index, 0, stk->item_size * blocks);
@@ -264,20 +264,20 @@ stack *compile(char ** source){
       v = *rVal;
       if(v < 0){
 	v = ~v; // v = -v + 1;
-	t = SYMRCALL;
+	t = SYM_RCALL;
 	PUTINT(stk, &t);
 	PUTINT(stk, &v);
       }else{
-	t = SYMRUCALL;
+	t = SYM_RUCALL;
 	PUTINT(stk, &t);
 	PUTINT(stk, &v);
       }
-      //stack.append(SYMRUCALL);
+      //stack.append(SYM_RUCALL);
       //      stack.append(rVal);
     }else{
       int len = strlen(word);
       /*if(len >= 2 && word[0] == '0' && (word[1] < '0' || word[1] > '9')){
-	t = SYMINT;
+	t = SYM_INT;
 	PUTINT(stk, &t);
 	switch(word[1]){
 	case 'b':
@@ -292,12 +292,12 @@ stack *compile(char ** source){
 	}
 	}else*/
       if(len >= 1 && word[0] >= '0' && word[0] <= '9'){
-	t = SYMINT;
+	t = SYM_INT;
 	PUTINT(stk, &t);
 	v = atoi(word);
 	PUTINT(stk, &v);
       }else{
-	t = SYMSTR;
+	t = SYM_STR;
 	PUTINT(stk, &t);
 	PUTSTR(stk, &word);
 	/* 
@@ -314,13 +314,13 @@ stack *compile(char ** source){
       }
     }
     /*      }else{
-	stack.append(SYMRUCALL);
+	stack.append(SYM_RUCALL);
 	stack.append(rVal);
       }
     }else{
       int len = strlen(word);
       if(len >= 2 && word[0] == '0' && (word[1] < '0' || word[1] > '9')){
-	stack.append(SYMINT);
+	stack.append(SYM_INT);
 	switch(word[1]){
 	case 'b':
 	  stack.append(int(word[2:],2));
@@ -333,10 +333,10 @@ stack *compile(char ** source){
 	  break;
 	}
       }else if(len >= 1 && word[0] >= '0' && word[0] <= '9'){
-	stack.append(SYMINT);
+	stack.append(SYM_INT);
 	stack.append(int(word));
       }else{
-	stack.append(SYMSTR);
+	stack.append(SYM_STR);
 	stack.append(word);
       }
       }*/
@@ -372,29 +372,29 @@ stack *secondpass(stack *dataspace, map_t *rmap){
     sym = *GETINT(dataspace);
     //printf("at %ld: %i\n", dataspace->index / dataspace->item_size, sym);
     switch(sym){
-    case SYMHALT:
+    case SYM_HALT:
       break;
       
-    case SYMRUCALL:
+    case SYM_RUCALL:
       dataspace->index += dataspace->item_size;
       break;
       
-    case SYMRCALL:
+    case SYM_RCALL:
       dataspace->index += dataspace->item_size;
       break;
       
-    case SYMCUCALL:
+    case SYM_CUCALL:
       dataspace->index += dataspace->item_size;
       break;
-    case SYMCCALL:
-      dataspace->index += dataspace->item_size;
-      break;
-      
-    case SYMINT:
+    case SYM_CCALL:
       dataspace->index += dataspace->item_size;
       break;
       
-    case SYMSTR:
+    case SYM_INT:
+      dataspace->index += dataspace->item_size;
+      break;
+      
+    case SYM_STR:
       word = *GETSTR(dataspace);
       rVal = get_int(rmap, word);
       if(rVal == NULL){
@@ -404,23 +404,23 @@ stack *secondpass(stack *dataspace, map_t *rmap){
       dataspace->index -= dataspace->item_size * 2;
       if(v < 0){
 	v = ~v; // v = -v + 1;
-	t = SYMRCALL;
+	t = SYM_RCALL;
 	PUTINT(dataspace, &t);
 	PUTINT(dataspace, &v);
       }else{
-	t = SYMRUCALL;
+	t = SYM_RUCALL;
 	PUTINT(dataspace, &t);
 	PUTINT(dataspace, &v);
       }
       break;
       
-    case SYMRET:
+    case SYM_RET:
       break;
       
-    case SYMRBRANCH:
+    case SYM_RBRANCH:
       dataspace->index += dataspace->item_size;
       break;
-    case SYMRJUMP:
+    case SYM_RJUMP:
       dataspace->index += dataspace->item_size;
       break;
       
@@ -454,49 +454,49 @@ void interp(stack *dataspace){
     sym = *GETINT(dataspace);
     //printf("sym: %i\n", sym);
     switch(sym){
-    case SYMHALT:
+    case SYM_HALT:
       running = 0;
       break;
       
-    case SYMRUCALL:
+    case SYM_RUCALL:
       ind = *GETINT(dataspace);
       d = dataspace->index;
       PUTINT(links, &d);
       dataspace->index = ind + DATASTART;
       break;
       
-    case SYMRCALL:
+    case SYM_RCALL:
       ind = *GETINT(dataspace);
       rundefs[ind](stk, links);
       break;
       
-    case SYMCUCALL:
+    case SYM_CUCALL:
       break;
-    case SYMCCALL:
+    case SYM_CCALL:
       break;
       
-    case SYMINT:
+    case SYM_INT:
       d = *GETINT(dataspace);
       PUTINT(stk, &d);
       break;
       
-    case SYMSTR:
+    case SYM_STR:
       str = *GETINT(dataspace);
       //stack_putStr(stk, str);
       break;
       
-    case SYMRET:
+    case SYM_RET:
       dataspace->index = *POPINT(links);
       break;
       
-    case SYMRBRANCH:
+    case SYM_RBRANCH:
       jmp = *GETINT(dataspace) * stk->item_size;
       cond = *POPINT(stk);
       if (cond == 0){
 	dataspace->index += jmp;
       }
       break;
-    case SYMRJUMP:
+    case SYM_RJUMP:
       jmp = *GETINT(dataspace) * stk->item_size;
       dataspace->index += jmp;
       break;
