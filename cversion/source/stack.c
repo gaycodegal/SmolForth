@@ -51,7 +51,7 @@ void stack_copy(stack *dst, stack *src, size_t n){
 }
 
 void *pop_stack(stack *s){
-  if(s->index - s->item_size < 0){
+  if(s->index < s->item_size){
     return NULL;
   }
   s->index -= s->item_size;
@@ -78,7 +78,7 @@ void shift_stack(stack *stk, long len, long amt) { //smaller of 2 shift
   char t;
   char * ary = stk->data;
   size_t start = stk->index;
-  if(stk->index < 0)
+  if(stk->index >= stk->length)
     return;
   len *= stk->item_size;
   if(len > stk->length - stk->index){

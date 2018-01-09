@@ -8,63 +8,127 @@ struct s_runfn {
 };
 
 void rLT(stack *stk, stack *links){
-  int a = *POPINT(stk);
-  a = *POPINT(stk) < a;
+  int *ta;
+  int a;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta < a;
   PUTINT(stk, &a);
 }
 
 void rGT(stack *stk, stack *links){
-  int a = *POPINT(stk);
-  a = *POPINT(stk) > a;
+  int *ta;
+  int a;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta > a;
   PUTINT(stk, &a);
 }
 
 void rLE(stack *stk, stack *links){
-  int a = *POPINT(stk);
-  a = *POPINT(stk) <= a;
+  int *ta;
+  int a;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta <= a;
   PUTINT(stk, &a);
 }
 
 void rGE(stack *stk, stack *links){
-  int a = *POPINT(stk);
-  a = *POPINT(stk) >= a;
+  int *ta;
+  int a;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta >= a;
   PUTINT(stk, &a);
 }
 
 void rEQ(stack *stk, stack *links){
-  int a = *POPINT(stk);
-  a = *POPINT(stk) == a;
+  int *ta;
+  int a;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta == a;
   PUTINT(stk, &a);
 }
 
 void rSub(stack *stk, stack *links){
-  int a = *POPINT(stk);
-  a = *POPINT(stk) - a;
+  int *ta;
+  int a;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta - a;
   PUTINT(stk, &a);
 }
 
 void rDup(stack *stk, stack *links){
-  int v;
+  int *tv;
   stk->index -= stk->item_size;
-  v = *GETINT(stk);
-  PUTINT(stk, &v);
+  tv = GETINT(stk);
+  if(tv == NULL)
+    return;
+  PUTINT(stk, tv);
 }
 
 void rNRot(stack *stk, stack *links){
+  int *t;
   int length, delta;
   size_t ind = stk->index;
-  delta = *POPINT(stk);
-  length = *POPINT(stk);
+  t = POPINT(stk);
+  if(t == NULL)
+    return;
+  delta = *t;
+  t = POPINT(stk);
+  if(t == NULL)
+    return;
+  length = *t;
   stk->index -= length * stk->item_size;
   shift_stack(stk, length, delta);
   stk->index = ind;
 }
 
 void rRot(stack *stk, stack *links){
+  int *t;
   int v1, v2;
   stk->index -= stk->item_size * 2;
-  v1 = *GETINT(stk);
-  v2 = *GETINT(stk);
+  t = GETINT(stk);
+  if(t == NULL)
+    return;
+  v1 = *t;
+  t = GETINT(stk);
+  if(t == NULL)
+    return;
+  v2 = *t;
   stk->index -= stk->item_size * 2;
   PUTINT(stk, &v2);
   PUTINT(stk, &v1);
@@ -75,7 +139,12 @@ void rPop(stack *stk, stack *links){
 }
 
 void rNPop(stack *stk, stack *links){
-  long amt = (long)*POPINT(stk);
+  int *t;
+  long amt;
+  t = POPINT(stk);
+  if(t == NULL)
+    return;
+  amt = (long)*t;
   amt = (long)(stk->index)  - amt * (long)(stk->item_size);
   //printf("index now : %i\n", (int)stk->index);
   if(amt < 0)
@@ -172,9 +241,18 @@ void cElse(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
 
 void cThen(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
   int t;
+  int *tv;
   int top = stk->index;
-  int mid = *POPINT(links);
-  int bottom = *POPINT(links);
+  int mid;
+  int bottom;
+  tv = POPINT(links);
+  if(tv == NULL)
+    return;
+  mid = *tv;
+  tv = POPINT(links);
+  if(tv == NULL)
+    return;
+  bottom = *tv;
   stk->index = bottom - 2 * stk->item_size;
   t = SYM_RBRANCH;
   PUTINT(stk, &t);
@@ -196,19 +274,34 @@ void cColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
 }
 
 void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap){
+  int *t;
   size_t top = stk->index;
-  size_t bottom = *POPINT(links);
-  size_t blocks = (top - bottom)/(stk->item_size);
-  stk->index = bottom;
-  if(blocks < 2)
+  size_t bottom;
+  size_t blocks;
+  char *name;
+  char **st;
+  t = POPINT(links);
+  if(t == NULL)
     return;
-  if(*GETINT(stk) != SYM_STR){
+  bottom = *t;
+  blocks = (top - bottom)/(stk->item_size);
+  stk->index = bottom;
+  if(blocks < 2){
     stk->index = bottom;
     return;
   }
-  char *name = *GETSTR(stk);
+  t = GETINT(stk);
+  if(t == NULL || *t != SYM_STR){
+    stk->index = bottom;
+    return;
+  }
+  st = GETSTR(stk);
+  if(st == NULL){
+    stk->index = bottom;
+    return;
+  }
+  name = *st;
   hashmap_put(rmap, name, make_int_ptr(defs->index));
-  //printf("new fn named: %s\n", name);
   stack_copy(defs, stk, blocks - 2);
   int retsym = SYM_RET;
   PUTINT(defs, &retsym);
@@ -217,13 +310,22 @@ void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap)
 }
 
 void rAdd(stack *stk, stack *links){
-  int a = *POPINT(stk);
-  a = *POPINT(stk) + a;
+  int *ta;
+  int a;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta;
+  ta = POPINT(stk);
+  if(ta == NULL)
+    return;
+  a = *ta + a;
   PUTINT(stk, &a);
 }
 
 void rDot(stack *stk, stack *links){
-  int a = *POPINT(stk);
+  int *tv = POPINT(stk);
+  int a = *tv;
   stk->index += stk->item_size;  
   printf("%i\n", a);
 }
@@ -395,6 +497,8 @@ stack *compile(char ** source){
 }
 
 stack *secondpass(stack *dataspace, map_t *rmap){
+  int *tpop;
+  char **stpop;
   int DATASTART = 1 * dataspace->item_size;
   dataspace->index = DATASTART;
   int ldata = dataspace->length;
@@ -402,7 +506,10 @@ stack *secondpass(stack *dataspace, map_t *rmap){
   char *word;
   int *rVal, v, t;
   while(dataspace->index < ldata){
-    sym = *GETINT(dataspace);
+    tpop = GETINT(dataspace);
+    if(tpop == NULL)
+      break;
+    sym = *tpop;
     //printf("at %ld: %i\n", dataspace->index / dataspace->item_size, sym);
     switch(sym){
     case SYM_HALT:
@@ -428,7 +535,10 @@ stack *secondpass(stack *dataspace, map_t *rmap){
       break;
       
     case SYM_STR:
-      word = *GETSTR(dataspace);
+      stpop = GETSTR(dataspace);
+      if(stpop == NULL)
+	break;
+      word = *stpop;
       rVal = get_int(rmap, word);
       if(rVal == NULL){
 	break;
@@ -468,11 +578,14 @@ stack *secondpass(stack *dataspace, map_t *rmap){
 
 void interp(stack *dataspace){
   //print_stack(dataspace);
-
+  int *tpop;
   stack *stk = new_stack(STACK_ITEM_SIZE, 30);
   stack *links = new_stack(STACK_ITEM_SIZE, 30);
   dataspace->index = 0;
-  dataspace->index = *GETINT(dataspace) * dataspace->item_size;
+  tpop = GETINT(dataspace);
+  if(tpop == NULL)
+    return;
+  dataspace->index = *tpop * dataspace->item_size;
   int DATASTART = 1 * dataspace->item_size;
   int ldata = dataspace->length;
   unsigned char sym;
@@ -485,7 +598,10 @@ void interp(stack *dataspace){
   dataspace->index += DATASTART;
   //printf("i: %i\n", dataspace->index);
   while(dataspace->index < ldata && running){
-    sym = *GETINT(dataspace);
+    tpop = GETINT(dataspace);
+    if(tpop == NULL)
+      break;
+    sym = *tpop;
     //printf("sym: %i\n", sym);
     switch(sym){
     case SYM_HALT:
@@ -493,14 +609,20 @@ void interp(stack *dataspace){
       break;
       
     case SYM_RUCALL:
-      ind = *GETINT(dataspace);
+      tpop = GETINT(dataspace);
+      if(tpop == NULL)
+	break;
+      ind = *tpop;
       d = dataspace->index;
       PUTINT(links, &d);
       dataspace->index = ind + DATASTART;
       break;
       
     case SYM_RCALL:
-      ind = *GETINT(dataspace);
+      tpop = GETINT(dataspace);
+      if(tpop == NULL)
+	break;
+      ind = *tpop;
       rundefs[ind](stk, links);
       break;
       
@@ -510,28 +632,46 @@ void interp(stack *dataspace){
       break;
       
     case SYM_INT:
-      d = *GETINT(dataspace);
+      tpop = GETINT(dataspace);
+      if(tpop == NULL)
+	break;
+      d = *tpop;
       PUTINT(stk, &d);
       break;
       
     case SYM_STR:
-      str = *GETINT(dataspace);
+      tpop = GETINT(dataspace);
+      if(tpop == NULL)
+	break;
+      str = *tpop;
       //stack_putStr(stk, str);
       break;
       
     case SYM_RET:
-      dataspace->index = *POPINT(links);
+      tpop = POPINT(links);
+      if(tpop == NULL)
+	break;
+      dataspace->index = *tpop;
       break;
       
     case SYM_RBRANCH:
-      jmp = *GETINT(dataspace) * stk->item_size;
-      cond = *POPINT(stk);
+      tpop = GETINT(dataspace);
+      if(tpop == NULL)
+	break;
+      jmp = *tpop * stk->item_size;
+      tpop = POPINT(stk);
+      if(tpop == NULL)
+	break;
+      cond = *tpop;
       if (cond == 0){
 	dataspace->index += jmp;
       }
       break;
     case SYM_RJUMP:
-      jmp = *GETINT(dataspace) * stk->item_size;
+      tpop = GETINT(dataspace);
+      if(tpop == NULL)
+	break;
+      jmp = *tpop * stk->item_size;
       dataspace->index += jmp;
       break;
       
@@ -580,7 +720,8 @@ int main(int argc, char **argv){
     t++;
     builtin++;
   }
-  char **words = split_words(": range dup 0 > if dup 1 - range else then ; 5 range 6 1 stack  nrot stack");
+  char **words = split_words("1 pop pop stack");
+  //char **words = split_words(": range dup 0 > if dup 1 - range else then ; 5 range 6 1 stack  nrot stack");
   //char **words = split_words(": FIB dup 1 <= if else dup 1 - FIB rot 2 - FIB + then ; 6 FIB .");
   //
   //": TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .");
