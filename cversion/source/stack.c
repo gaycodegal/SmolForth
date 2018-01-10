@@ -7,6 +7,7 @@ stack *new_stack(size_t item_size, size_t size){
   s->index = 0;
   s->length = size * item_size;
   s->item_size = item_size;
+  return s;
 }
 
 void free_stack(stack *s){

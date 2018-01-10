@@ -156,7 +156,7 @@ void rNPop(stack *stk, stack *links){
 }
 
 void rStack(stack *stk, stack *links){
-  printf("stack (%ld): ", stk->index / stk->item_size), print_stack(stk);
+  printf("stack (%i): ", (int)(stk->index / stk->item_size)), print_stack(stk);
 }
 
 static const struct s_runfn builtins [] = {
@@ -325,6 +325,8 @@ void rAdd(stack *stk, stack *links){
 
 void rDot(stack *stk, stack *links){
   int *tv = POPINT(stk);
+  if(tv == NULL)
+    return;
   int a = *tv;
   stk->index += stk->item_size;  
   printf("%i\n", a);
@@ -720,19 +722,42 @@ int main(int argc, char **argv){
     t++;
     builtin++;
   }
-  char **words = split_words("1 pop pop stack");
+  //char **words = split_words("1 pop pop stack");
   //char **words = split_words(": range dup 0 > if dup 1 - range else then ; 5 range 6 1 stack  nrot stack");
-  //char **words = split_words(": FIB dup 1 <= if else dup 1 - FIB rot 2 - FIB + then ; 6 FIB .");
-  //
-  //": TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .");
-  //": THREE 1 2 + ; THREE THREE + .");
-  //": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
-  stack *compiled = compile(words);//words//#sys.stdin
-  //print_stack(compiled);
-  interp(compiled);
-  free_stack(compiled);
-  printf("ok\n");
-  free_words(words);
+  char **words;
+  stack *compiled;
+  char *first = ": FIB dup 1 <= if else dup 1 - FIB rot 2 - FIB + then ; 6 FIB .";
+  char *input;
+  input = strdup(first);
+  int len = strlen(input);
+  while(1){
+    if(input && len > 0){
+      printf("CODE: %s\n", input);
+      words = split_words(input);
+      //
+      //": TESTIF 0 + if 30 else 40 then ; 1 TESTIF 0 TESTIF + .");
+      //": THREE 1 2 + ; THREE THREE + .");
+      //": THREE 1 2 + if NOTZERO else ZERO then ; THREE .");
+      compiled = compile(words);//words//#sys.stdin
+      //print_stack(compiled);
+      interp(compiled);
+      free_stack(compiled);
+      printf("ok\n");
+      free_words(words);
+      free(input);
+      input = NULL;
+      size_t size;
+      printf("> ");
+      getline(&input, &size, stdin);
+    }
+    if(input){
+      len = strlen(input);
+      if(input[len - 1] == '\n'){
+	input[len - 1] = 0;
+	--len;
+      }
+    }
+  }
+  printf("done\n");
   return 0;
 }
- 
