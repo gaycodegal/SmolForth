@@ -2,39 +2,8 @@
 #define _MAIN_H_
 
 #include <stdio.h>
-#include "stack.h"
 #include <stdarg.h>
-#include "hashmap.h"
-
-enum ForthByteCode{SYM_HALT = 0, SYM_RUCALL, SYM_RCALL, SYM_CUCALL, SYM_CCALL, SYM_RET, SYM_INT, SYM_STR, SYM_RBRANCH, SYM_RJUMP};
-size_t STACK_ITEM_SIZE;
-
-/**
-   a compile-time Forth function 
- */
-typedef void (*compfn)(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap);
-
-/**
-   a run-time Forth function
- */
-typedef void (*runfn)(stack *stk, stack *links);
-
-/**
-   adds the top two ints on the stack
-   possibly might want to make it add
-   any top two things
- */
-void rAdd(stack *stk, stack *links);
-
-/**
-   prints the top (int) of the stack.
- */
-void rDot(stack *stk, stack *links);
-
-/**
-   makes a pointer to an integer
- */
-int *make_int_ptr(int i);
+#include "words.h"
 
 /**
    splits a string (on spaces) into a NULL terminated
@@ -47,26 +16,6 @@ char **split_words(char *source);
    by split_words
  */
 void free_words(char **words);
-
-/**
-   starts function generation process
- */
-void cColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap);
-
-/**
-   ends function generation process
- */
-void cSemiColon(stack *stk, stack *links, stack *defs, map_t *cmap, map_t *rmap);
-
-/**
-   makes a pointer to a compile-time function
- */
-compfn *make_comp_ptr(compfn fn);
-
-/**
-   gets an int from a map
- */
-int *get_int(map_t *map, char *key);
 
 /**
    takes in a iterable which returns the separated words
